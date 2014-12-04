@@ -1,3 +1,12 @@
+//
+//	Name: Ng, Michael
+//	Project: 4
+//	Due: 12/4/2014
+//	Course: CS-245-01-f14
+//
+//	Description: Implement an copy of windows notepad with features that are bolded
+//	
+
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
@@ -85,6 +94,8 @@ public class JNotepad implements ActionListener {
 	JDialog dialog;
 	JTextField tf;
 
+	ImageIcon img = new ImageIcon("JNotepad.png");
+
 	FontSelection fs;
 
 	/**
@@ -118,6 +129,7 @@ public class JNotepad implements ActionListener {
 		frame = new JFrame("JNotepad");
 		frame.setBounds(100, 100, 450, 300);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setIconImage(img.getImage());
 
 		log = new JTextArea(5, 20);
 		log.setMargin(new Insets(5, 5, 5, 5));
@@ -299,13 +311,15 @@ public class JNotepad implements ActionListener {
 		popupMenu.add(mntmSelectAll);
 	}
 
+	/**
+	 * Actionlisteners for JMenu and JMenuItems
+	 */
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == mntmNew) {
+		if (e.getSource() == mntmNew) { // new document
 			textArea.setText("");
 			newFile = true;
-
 		}
-		if (e.getSource() == mntmOpen) {
+		if (e.getSource() == mntmOpen) { // open document
 			int returnVal = fc.showOpenDialog(frame);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				openFile = fc.getSelectedFile();
@@ -317,37 +331,46 @@ public class JNotepad implements ActionListener {
 					e1.printStackTrace();
 				}
 
-				log.append("Opening " + openFile.getName() + ".\n");
-			} else {
-				log.append("Open command canclled by user.\n");
 			}
-			log.setCaretPosition(log.getDocument().getLength());
 		}
-		if (e.getSource() == mntmSave) {
+		if (e.getSource() == mntmSave) { // save document, if document is new,
+											// then SaveAs is used
 			if (newFile == true) {
 				saveAs();
 			} else
 				save(openFile);
 		}
-		if (e.getSource() == mntmSaveAs) {
+		if (e.getSource() == mntmSaveAs) { // save as menu item (method below)
 			saveAs();
 		}
-		if (e.getSource() == mntmExit) {
-			System.exit(1);
+		if (e.getSource() == mntmExit) { // exit menu item asks if user wants to
+											// save
+			int result = JOptionPane.showConfirmDialog(frame,
+					"Do you wish to save changes to this document?");
+			if (JOptionPane.YES_OPTION == result) {
+				if (newFile == true) {
+					saveAs();
+				} else
+					save(openFile);
+				System.exit(1);
+			} else if (JOptionPane.NO_OPTION == result)
+				System.exit(1);
 		}
-		if (e.getSource() == mntmCut) {
+		if (e.getSource() == mntmCut) { // cut selected text
 			textArea.cut();
 		}
-		if (e.getSource() == mntmCopy) {
+		if (e.getSource() == mntmCopy) { // copy selected text
 			textArea.copy();
 		}
-		if (e.getSource() == mntmPaste) {
+		if (e.getSource() == mntmPaste) { // paste selected text
 			textArea.paste();
 		}
-		if (e.getSource() == mntmDelete) {
+		if (e.getSource() == mntmDelete) { // delete selected text
 			textArea.replaceSelection("");
 		}
-		if (e.getSource() == mntmFind) {
+		if (e.getSource() == mntmFind) { // find selected text, searches for
+											// text first, then sets caret and
+											// selection positions
 
 			text = textArea.getText();
 			next = JOptionPane.showInputDialog(null, "Find...", "Find",
@@ -369,80 +392,95 @@ public class JNotepad implements ActionListener {
 			textArea.setSelectionEnd(index + next.length());
 
 		}
-		if (e.getSource() == mntmSelectAll) {
+		if (e.getSource() == mntmSelectAll) { //select all text in textArea
 			textArea.selectAll();
 		}
-		if (e.getSource() == mntmTimedate) {
+		if (e.getSource() == mntmTimedate) { //prints time and date to Text Area
 			DateFormat formatter = new SimpleDateFormat("HH:mm MM-dd-yyyy");
 			Date date = new Date();
 			textArea.append(formatter.format(date));
 		}
-		if (e.getSource() == chckbxmntmWordWrap) {
+		if (e.getSource() == chckbxmntmWordWrap) {//sets word wrap
 			textArea.setLineWrap(chckbxmntmWordWrap.getState());
 		}
-		if (e.getSource() == mntmFont) {
+		if (e.getSource() == mntmFont) { //sets font, see font class
 			fs = new FontSelection();
 		}
 
-		if (e.getSource() == mntmAboutJnotepad) {
+		if (e.getSource() == mntmAboutJnotepad) { //displays about message
 			JOptionPane.showMessageDialog(frame, "(C) 2014 Michael Ng",
 					"About", 1);
 		}
 	}
 
-	private static WindowListener closeWindow = new WindowAdapter() {
-		public void windowClosing(WindowEvent e) {
-			e.getWindow().dispose();
-		}
-	};
-
+	/**
+	 * method for the saveAs menu function, asks user for location and name of
+	 * file to save to, then runs the save method.
+	 * 
+	 */
 	public void saveAs() {
 		int returnVal = fc.showSaveDialog(frame);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			openFile = fc.getSelectedFile();
 			save(openFile);
 			log.append("Saving: " + openFile.getName() + ".\n");
-		} else {
-			log.append("Save command cancelled b user.\n");
 		}
 	}
 
+	/**
+	 * Method for the save menu function, quick saves if user already has a file
+	 * open, also sets the title to the file name
+	 * 
+	 * @param file
+	 */
 	public void save(File file) {
 		try {
 			FileWriter fw = new FileWriter(file);
 			String temp = textArea.getText();
-			System.out.println(temp);
 			fw.write(temp);
 			newFile = false;
 			frame.setTitle(file.getName() + " - JNotepad");
 			fw.close();
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 	}
 
+	/**
+	 * Method to read file line by line, then set to a string. String is then
+	 * set to text area.
+	 * 
+	 * @param path
+	 * @return
+	 * @throws IOException
+	 */
 	public String fileReader(String path) throws IOException {
-		BufferedReader br = new BufferedReader(new FileReader(path));
-		String everything = null;
+		BufferedReader reader = new BufferedReader(new FileReader(path));
+		String all = null;
 		try {
-			StringBuilder sb = new StringBuilder();
-			String line = br.readLine();
+			StringBuilder builder = new StringBuilder();
+			String line = reader.readLine();
 
 			while (line != null) {
-				sb.append(line);
-				sb.append(System.lineSeparator());
-				line = br.readLine();
+				builder.append(line);
+				builder.append(System.lineSeparator());
+				line = reader.readLine();
 			}
-			everything = sb.toString();
+			all = builder.toString();
 		} catch (IOException e) {
 			e.printStackTrace();
-		} finally {
-			br.close();
-		}
-		return everything;
+		} 
+			
+		reader.close();
+		return all;
 	}
 
+	/**
+	 * Action listener to open popup menu
+	 * 
+	 * @param component
+	 * @param popup
+	 */
 	private static void addPopup(Component component, final JPopupMenu popup) {
 		component.addMouseListener(new MouseAdapter() {
 			public void mousePressed(MouseEvent e) {
